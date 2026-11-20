@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"
+  ><head
+    ><meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    /><title>Momentful content editor</title></head
+  >
+  <body
+    ><script>
+      window.CMS_MANUAL_INIT = true;
+      new MutationObserver(() => {
+        for (const b of document.querySelectorAll('button'))
+          if (/Sign In Using Access Token|Sign In with/.test(b.textContent))
+            b.hidden = true;
+      }).observe(document.body, { childList: true, subtree: true });</script
+    ><script src="/editor/sveltia-cms.js"></script
+    ><script type="module">
+      import config from '/editor/config.mjs';
+      CMS.init({ config });
+    </script></body
+  ></html
+>

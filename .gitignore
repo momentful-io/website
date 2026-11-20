@@ -1,0 +1,8 @@
+node_modules/
+_site/
+cms/vendor/
+.local/
+.DS_Store
+.env
+.env.*
+!.env.example

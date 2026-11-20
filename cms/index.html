@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="en"
+  ><head
+    ><meta charset="utf-8" /><meta
+      name="viewport"
+      content="width=device-width,initial-scale=1"
+    /><title>Momentful I/O – Local editor</title>
+    <style>
+      body {
+        font: 18px system-ui;
+        max-width: 720px;
+        margin: 4rem auto;
+        padding: 1rem;
+        line-height: 1.6;
+      }
+      a {
+        display: inline-block;
+        padding: 0.7rem 1rem;
+        margin: 0.3rem;
+        background: #eee;
+        color: #222;
+        border-radius: 0.4rem;
+      }
+      small {
+        display: block;
+      }
+    </style></head
+  >
+  <body>
+    <h1>Edit Momentful I/O locally</h1>
+    <p>
+      Open the editor, choose <strong>Work with Local Repository</strong>, and
+      grant access to the project folder containing <strong>package.json</strong>.
+      You can work without signing in.
+    </p>
+    <p>
+      <a href="/editor/">Open content editor</a>
+      <a href="/" target="_blank">Preview website</a>
+      <a href="/help/README">README</a>
+      <a href="/help/README#publishing">Publishing</a>
+    </p>
+    <p>
+      Click <strong>Save</strong> to save locally and check the preview. After
+      saving, press <strong>Ctrl+C</strong> in the terminal to stop the editor.
+      <strong>npm run build</strong> builds the site without uploading it.
+    </p>
+    <p>
+      <strong>npm run deploy changes the public website.</strong>
+      Set up SFTP or FTPS access and back up the live website first. Saving,
+      previewing, and building are local operations.
+    </p>
+  </body>
+</html>

@@ -1,0 +1,50 @@
+Momentful I/O Website
+Copyright 2026 Yoveno GmbH and the Momentful I/O contributors
+
+This repository contains material under different terms.
+
+1. Source code: Apache License 2.0 (see LICENSE)
+
+   Everything not listed under 2. to 4., in particular scripts/, cms/,
+   eleventy.config.js, src/_includes/, src/_data/, src/assets/site.css,
+   src/assets/site.js, src/robots.njk, src/sitemap.njk and the project
+   documentation (README.md).
+
+2. Website content: Creative Commons Attribution-ShareAlike 4.0
+   International (CC BY-SA 4.0, see LICENSE-CONTENT)
+
+   Texts and media of the website, unless marked otherwise:
+   - src/pages/*.md
+   - src/projects/*.md
+   - src/assets/uploads/
+
+   Suggested attribution: "Momentful I/O (https://momentful.io),
+   licensed under CC BY-SA 4.0".
+
+3. Logos: not covered by 1. or 2.
+
+   src/assets/graphics/logos/ contains the Momentful I/O, Calendify,
+   and Skedz logos. They are not freely licensed. Their use is
+   governed by the Branding & Trademarks policy in src/pages/branding.md,
+   published at https://momentful.io/branding/.
+
+4. Third-party components
+
+   - Material Symbols icons by Google
+     src/assets/graphics/icons/google-fonts-icons/
+     Apache License 2.0 (LICENSE.txt in that directory)
+
+   - Ionicons, Copyright (c) 2015-present Ionic (http://ionic.io/)
+     src/assets/graphics/icons/ionicons-icons/
+     MIT License (LICENSE.txt in that directory)
+
+   - Roboto variable font, installed via npm (@fontsource-variable/roboto)
+     and copied into the build output as assets/fonts/roboto-latin.woff2
+     SIL Open Font License 1.1 (copied as assets/fonts/LICENSE.txt)
+
+   Dependencies installed via npm, such as Eleventy and Sveltia CMS, are
+   not part of this repository or of the published website. Their
+   licenses are included in their packages.
+
+Contributions are accepted under the same terms: code under the
+Apache License 2.0, website content under CC BY-SA 4.0.

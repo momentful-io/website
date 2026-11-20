@@ -1,0 +1,9 @@
+[
+  { "label": "Mission", "url": "/mission/", "icon": "mission" },
+  { "label": "Projects", "url": "/", "icon": "projects" },
+  {
+    "label": "GitHub",
+    "url": "https://github.com/momentful-io",
+    "icon": "github"
+  }
+]
