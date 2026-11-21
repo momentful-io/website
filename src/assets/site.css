@@ -41,6 +41,7 @@
   --bg: #fff;
   --header: #fff;
   --surface: #ececec;
+  --surface-hover: #e0e0e0;
   --hero: #ececec;
   --text: #000;
   --heading: #333;
@@ -57,6 +58,7 @@
   --bg: #121212;
   --header: #1f1f1f;
   --surface: #1e1e1e;
+  --surface-hover: #2d2d2d;
   --hero: #2d2d2d;
   --text: #fff;
   --heading: #f2f2f2;
@@ -73,6 +75,7 @@
     --bg: #121212;
     --header: #1f1f1f;
     --surface: #1e1e1e;
+    --surface-hover: #2d2d2d;
     --hero: #2d2d2d;
     --text: #fff;
     --heading: #f2f2f2;
@@ -291,7 +294,7 @@ nav {
   color: var(--nav);
 }
 .project-card:hover {
-  box-shadow: 0 0 0 2px var(--nav);
+  background-color: var(--surface-hover)
 }
 .project-card:hover > .icon {
   color: var(--text);
