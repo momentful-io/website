@@ -1,4 +1,4 @@
-# Momentful I/O
+# Momentful I/O website
 
 This repository contains the source code and content of the [Momentful I/O website](https://momentful.io), along with its local editing tools. Eleventy builds the static site, and Sveltia CMS lets you edit content and preview changes on your computer.
 
