@@ -13,6 +13,7 @@
   <link rel="stylesheet" href="{% assetUrl 'site.css' %}">
   <script src="{% assetUrl 'site.js' %}" defer></script>
 </head>
+{% set bubbles = logoBubbles[logo] if logo else '' %}
 <body class="{% if homepage %}home{% else %}inner{% endif %}">
   <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
@@ -20,7 +21,7 @@
       <a class="brand" href="/" aria-label="Momentful I/O — homepage">{% graphic 'momentful-io', 'logo' %}<span><strong>Momentful</strong> I/O</span></a>
       <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="navigation" aria-label="Open navigation" hidden>{% graphic 'menu' %}</button>
       <nav id="navigation" aria-label="Main navigation">
-        {% for item in navigation %}<a href="{{ item.url }}"{% if page.url == item.url %} aria-current="page"{% endif %}>{% graphic item.icon %}{{ item.label }}</a>{% endfor %}
+        {% for item in navigation %}<a href="{{ item.url }}"{% if page.url == item.url and item.url != '/' %} aria-current="page"{% endif %}>{% graphic item.icon %}{{ item.label }}</a>{% endfor %}
       </nav>
     </div>
   </header>
@@ -31,10 +32,11 @@
         <div class="project-list">{% for project in collections.projects %}<a class="project-card" href="{{ project.url }}">{% if project.data.logo %}{% graphic project.data.logo, 'logo' %}{% else %}{% graphic 'projects' %}{% endif %}<div class="card-copy"><h3>{{ project.data.name }}</h3><p>{{ project.data.summary }}</p></div>{% graphic 'arrow' %}</a>{% endfor %}</div>
       </section>
     {% else %}
-      <div class="page-hero"><div class="article-heading{% if logo %} with-logo{% endif %}">{% if logo %}{% graphic logo, 'logo' %}{% endif %}<div><h1>{{ heading or title }}</h1>{% if subtitle %}<p>{{ subtitle }}</p>{% endif %}</div></div></div>
+      <div class="page-hero"><div class="article-heading{% if logo %} with-logo{% endif %}">{% if bubbles %}<button type="button" class="logo-button" data-bubbles="{{ bubbles }}" aria-label="Let bubbles rise from the {{ title }} logo">{% graphic logo, 'logo' %}</button>{% elif logo %}{% graphic logo, 'logo' %}{% endif %}<div><h1>{{ heading or title }}</h1>{% if subtitle %}<p>{{ subtitle }}</p>{% endif %}</div></div></div>
       <article class="article-content">{{ content | safe }}{% if project or logo %}<nav class="back-links" aria-label="Related pages"><a href="/">Homepage</a></nav>{% endif %}</article>
     {% endif %}
   </main>
   <footer class="site-footer"><div class="theme-control" hidden><label for="theme">Theme:</label><span class="select-wrap"><select id="theme" name="theme"><option value="system">System</option><option value="light">Light</option><option value="dark">Dark</option></select>{% graphic 'chevron' %}</span></div><a href="/imprint/">Imprint</a> <a href="/branding/">Branding</a></footer>
+  {% if bubbles %}<script src="/assets/js/logo-bubbles.js" defer></script>{% endif %}
 </body>
 </html>
