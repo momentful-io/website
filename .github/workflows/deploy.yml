@@ -7,6 +7,11 @@ on:
   push:
     branches: [main]
   workflow_dispatch:
+    inputs:
+      full:
+        description: Upload all files, not only the changed ones
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -53,7 +58,7 @@ jobs:
           DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
           DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && format('{0}/deploy_key', runner.temp) || '' }}
           DEPLOY_PASSPHRASE: ${{ secrets.DEPLOY_PASSPHRASE }}
-        run: npm run deploy
+        run: npm run deploy -- ${{ inputs.full && '--full' || '' }}
 
       - name: Remove SSH key
         if: always()

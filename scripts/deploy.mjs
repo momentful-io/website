@@ -12,6 +12,7 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createHash, timingSafeEqual } from 'node:crypto';
 import { isIP } from 'node:net';
 import { spawn } from 'node:child_process';
+import { Readable, Writable } from 'node:stream';
 
 const projectRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 export class DeployError extends Error {}
@@ -179,6 +180,41 @@ export async function validateConfig(env, root) {
   return config;
 }
 
+// The server keeps the SHA-256 of every file the last deployment uploaded, so the next run
+// sends only changed files. It lists only public website files. Without it, everything is uploaded.
+export const manifestName = 'deploy-manifest.json';
+const manifestLimit = 1024 * 1024;
+
+export async function hashFiles(files) {
+  for (const file of files)
+    file.hash = createHash('sha256')
+      .update(await readFile(file.local))
+      .digest('hex');
+}
+
+export function parseManifest(source) {
+  try {
+    const data = JSON.parse(source);
+    if (data?.version !== 1 || !data.files || typeof data.files !== 'object')
+      return {};
+    return Object.fromEntries(
+      Object.entries(data.files).filter(
+        ([, hash]) => typeof hash === 'string' && /^[0-9a-f]{64}$/.test(hash),
+      ),
+    );
+  } catch {
+    return {};
+  }
+}
+
+export function createManifest(files) {
+  const entries = files.map((file) => [file.relative, file.hash]);
+  return Buffer.from(
+    JSON.stringify({ version: 1, files: Object.fromEntries(entries) }, null, 1) +
+      '\n',
+  );
+}
+
 export function hostVerifier(expected) {
   return (key) => {
     const actual = createHash('sha256').update(key).digest();
@@ -280,8 +316,9 @@ async function checkSource(file, output) {
   return info;
 }
 
-export async function upload(config, files, output, Client) {
+export async function upload(config, files, output, Client, { full = false } = {}) {
   const client = new Client();
+  let uploaded = 0;
   try {
     await new Promise((done, reject) => {
       client.on('error', reject);
@@ -307,7 +344,23 @@ export async function upload(config, files, output, Client) {
             knownDirectories.add(path);
           }
           await directory(config.remote, false);
-          for (const file of files) {
+          const manifestPath = posix.join(config.remote, manifestName);
+          let previous = {};
+          try {
+            const info = await call(sftp, 'lstat', manifestPath);
+            if (!info.isFile() || info.isSymbolicLink())
+              throw Error('Unsafe manifest');
+            if (!full && info.size <= manifestLimit)
+              previous = parseManifest(
+                (await call(sftp, 'readFile', manifestPath)).toString('utf8'),
+              );
+          } catch (error) {
+            if (error.code !== 2) throw error;
+          }
+          const changed = files.filter(
+            (file) => previous[file.relative] !== file.hash,
+          );
+          for (const file of changed) {
             const localInfo = await checkSource(file, output);
             const target = posix.join(config.remote, file.relative);
             await directory(posix.dirname(target), true);
@@ -327,7 +380,11 @@ export async function upload(config, files, output, Client) {
               written.size !== localInfo.size
             )
               throw Error('Incomplete upload');
+            uploaded++;
           }
+          // Written last: after a failed run, the next one uploads these files again.
+          if (changed.length)
+            await call(sftp, 'writeFile', manifestPath, createManifest(files));
           done();
         } catch (error) {
           reject(error);
@@ -353,12 +410,20 @@ export async function upload(config, files, output, Client) {
   } finally {
     client.destroy();
   }
+  return uploaded;
 }
 
 // FTPS = FTP with explicit TLS (AUTH TLS). basic-ftp aborts if TLS is refused, verifies the
 // certificate, encrypts data connections too and never falls back to plain FTP.
-export async function uploadFtps(config, files, output, Client) {
+export async function uploadFtps(
+  config,
+  files,
+  output,
+  Client,
+  { full = false } = {},
+) {
   const client = new Client(120000);
+  let uploaded = 0;
   try {
     await client.access({
       host: config.host,
@@ -401,7 +466,28 @@ export async function uploadFtps(config, files, output, Client) {
       knownDirectories.add(path);
     }
     await directory(config.remote, false);
-    for (const file of files) {
+    const manifestPath = posix.join(config.remote, manifestName);
+    const record = (await entries(config.remote)).get(manifestName);
+    if (record && (!record.isFile || record.isSymbolicLink))
+      throw Error('Unsafe manifest');
+    let previous = {};
+    if (record && !full && record.size <= manifestLimit) {
+      const chunks = [];
+      await client.downloadTo(
+        new Writable({
+          write(chunk, encoding, next) {
+            chunks.push(chunk);
+            next();
+          },
+        }),
+        manifestPath,
+      );
+      previous = parseManifest(Buffer.concat(chunks).toString('utf8'));
+    }
+    const changed = files.filter(
+      (file) => previous[file.relative] !== file.hash,
+    );
+    for (const file of changed) {
       const localInfo = await checkSource(file, output);
       const target = posix.join(config.remote, file.relative);
       if (/[\x00-\x1f\x7f]/.test(target)) throw Error('Unsafe name');
@@ -414,7 +500,11 @@ export async function uploadFtps(config, files, output, Client) {
       await client.uploadFrom(file.local, target);
       if ((await client.size(target)) !== localInfo.size)
         throw Error('Incomplete upload');
+      uploaded++;
     }
+    // Written last: after a failed run, the next one uploads these files again.
+    if (changed.length)
+      await client.uploadFrom(Readable.from(createManifest(files)), manifestPath);
   } catch {
     fail(
       'FTPS failed. Check the certificate, authentication, destination directory, permissions, and network locally. Some files may have been uploaded. No existing server files were deleted.',
@@ -422,11 +512,13 @@ export async function uploadFtps(config, files, output, Client) {
   } finally {
     client.close();
   }
+  return uploaded;
 }
 
 export async function deploy({
   root = projectRoot,
   check = false,
+  full = false,
   build = buildProduction,
   Client,
   log = console.log,
@@ -448,6 +540,9 @@ export async function deploy({
     await build(root);
     const output = resolve(root, '_site');
     const files = await collectFiles(output);
+    if (files.some((file) => file.relative === manifestName))
+      fail(`_site must not contain ${manifestName}. No files were uploaded.`);
+    await hashFiles(files);
     const ftps = config.protocol === 'ftps';
     const label = ftps ? 'FTPS' : 'SFTP';
     if (!Client) {
@@ -466,9 +561,22 @@ export async function deploy({
       return;
     }
     log(
-      `Build succeeded. Uploading ${files.length} website files over ${label} ...`,
+      full
+        ? `Build succeeded. Uploading all ${files.length} website files over ${label} ...`
+        : `Build succeeded: ${files.length} website files. Uploading changed files over ${label} ...`,
     );
-    await (ftps ? uploadFtps : upload)(config, files, output, Client);
+    const uploaded = await (ftps ? uploadFtps : upload)(
+      config,
+      files,
+      output,
+      Client,
+      { full },
+    );
+    log(
+      uploaded
+        ? `${uploaded} of ${files.length} files uploaded.`
+        : 'No changes since the last deployment. Nothing was uploaded.',
+    );
     log(
       'DEPLOYMENT SUCCESSFUL. Review the published website in your browser.',
     );
@@ -485,17 +593,20 @@ if (
   const args = process.argv.slice(2);
   if (
     args.length > 1 ||
-    args.some((arg) => !['--check', '--help'].includes(arg))
+    args.some((arg) => !['--check', '--full', '--help'].includes(arg))
   ) {
-    console.error('Use --check (local only) or --help.');
+    console.error('Use --check (local only), --full or --help.');
     process.exitCode = 1;
   } else if (args.includes('--help'))
     console.log(
-      'With no options, run a fresh build and upload the contents of _site over SFTP or FTPS (DEPLOY_PROTOCOL). --check validates the configuration and build locally without connecting to the server. Configure deployment in .env in the project directory.',
+      `With no options, run a fresh build and upload the files of _site that changed since the last deployment over SFTP or FTPS (DEPLOY_PROTOCOL), as recorded in ${manifestName} on the server. --full uploads all files, for example after files on the server were changed or deleted by hand. --check validates the configuration and build locally without connecting to the server. Configure deployment in .env in the project directory.`,
     );
   else
     try {
-      await deploy({ check: args.includes('--check') });
+      await deploy({
+        check: args.includes('--check'),
+        full: args.includes('--full'),
+      });
     } catch (error) {
       console.error(
         error instanceof DeployError
