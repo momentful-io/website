@@ -12,6 +12,7 @@
   <link rel="preload" href="/assets/fonts/roboto-latin.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="{% assetUrl 'site.css' %}">
   <script src="{% assetUrl 'site.js' %}" defer></script>
+  <meta name="generator" content="Eleventy">
 </head>
 {% set bubbles = logoBubbles[logo] if logo else '' %}
 <body class="{% if homepage %}home{% else %}inner{% endif %}">
@@ -32,7 +33,7 @@
         <div class="project-list">{% for project in collections.projects %}<a class="project-card" href="{{ project.url }}">{% if project.data.logo %}{% graphic project.data.logo, 'logo' %}{% else %}{% graphic 'projects' %}{% endif %}<div class="card-copy"><h3>{{ project.data.name }}</h3><p>{{ project.data.summary }}</p></div>{% graphic 'arrow' %}</a>{% endfor %}</div>
       </section>
     {% else %}
-      <div class="page-hero"><div class="article-heading{% if logo %} with-logo{% endif %}">{% if bubbles %}<button type="button" class="logo-button" data-bubbles="{{ bubbles }}" aria-label="Let bubbles rise from the {{ title }} logo">{% graphic logo, 'logo' %}</button>{% elif logo %}{% graphic logo, 'logo' %}{% endif %}<div><h1>{{ heading or title }}</h1>{% if subtitle %}<p>{{ subtitle }}</p>{% endif %}</div></div></div>
+      <div class="page-hero"><div class="article-heading{% if logo %} with-logo{% endif %}">{% if bubbles %}<button type="button" class="logo-button" data-bubbles="{{ bubbles }}" data-bubbles-count="25" aria-label="Let bubbles rise from the {{ title }} logo">{% graphic logo, 'logo' %}</button>{% elif logo %}{% graphic logo, 'logo' %}{% endif %}<div><h1>{{ heading or title }}</h1>{% if subtitle %}<p>{{ subtitle }}</p>{% endif %}</div></div></div>
       <article class="article-content">{{ content | safe }}{% if project or logo %}<nav class="back-links" aria-label="Related pages"><a href="/">Homepage</a></nav>{% endif %}</article>
     {% endif %}
   </main>
