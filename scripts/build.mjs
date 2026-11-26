@@ -15,6 +15,8 @@ if (
 ) {
   throw new Error('Run the build from the Momentful I/O project root.');
 }
+// The online CMS at /admin/ is copied from cms/vendor, which this prepares.
+await import('./prepare-cms.mjs');
 await rm(output, { recursive: true, force: true });
 const result = spawnSync(
   process.execPath,

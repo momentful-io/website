@@ -41,7 +41,7 @@ for (const name of [
       `https://cdn\\.jsdelivr\\.net/fontsource/fonts/${name}[^"'\\s)]+?\\.woff2`,
       'g',
     ),
-    `/editor/fonts/${file}`,
+    `/admin/fonts/${file}`,
   );
 }
 await writeFile(

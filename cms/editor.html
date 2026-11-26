@@ -1,23 +1,16 @@
 <!doctype html>
-<html lang="en"
-  ><head
-    ><meta charset="utf-8" /><meta
-      name="viewport"
-      content="width=device-width,initial-scale=1"
-    /><title>Momentful content editor</title></head
-  >
-  <body
-    ><script>
-      window.CMS_MANUAL_INIT = true;
-      new MutationObserver(() => {
-        for (const b of document.querySelectorAll('button'))
-          if (/Sign In Using Access Token|Sign In with/.test(b.textContent))
-            b.hidden = true;
-      }).observe(document.body, { childList: true, subtree: true });</script
-    ><script src="/editor/sveltia-cms.js"></script
-    ><script type="module">
-      import config from '/editor/config.mjs';
-      CMS.init({ config });
-    </script></body
-  ></html
->
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="robots" content="noindex" />
+    <!-- Sveltia CMS keeps the GitHub access token in localStorage: allow only own scripts and GitHub. -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; font-src 'self' data:; img-src 'self' data: blob: https://*.githubusercontent.com; media-src 'self' blob:; connect-src 'self' blob: data: https://api.github.com https://*.githubusercontent.com https://www.githubstatus.com; worker-src 'self' blob:; frame-src 'self' blob:; manifest-src 'self' blob:; object-src 'none'; base-uri 'self'"
+    />
+    <title>Momentful content editor</title>
+    <script type="module" src="/admin/editor.js"></script>
+  </head>
+  <body></body>
+</html>

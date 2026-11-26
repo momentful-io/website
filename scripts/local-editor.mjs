@@ -108,9 +108,11 @@ const server = createServer(async (req, res) => {
   try {
     const fixed = {
       '/start/': 'cms/index.html',
-      '/editor/': 'cms/editor.html',
-      '/editor/config.mjs': 'cms/config.mjs',
-      '/editor/sveltia-cms.js': 'cms/vendor/sveltia-cms.js',
+      // Same paths as the online CMS (see eleventy.config.js).
+      '/admin/': 'cms/editor.html',
+      '/admin/editor.js': 'cms/editor.js',
+      '/admin/config.js': 'cms/config.mjs',
+      '/admin/sveltia-cms.js': 'cms/vendor/sveltia-cms.js',
       '/legal/LICENSE': 'LICENSE',
       '/legal/LICENSE-CONTENT': 'LICENSE-CONTENT',
       '/legal/NOTICE': 'NOTICE',
@@ -119,13 +121,13 @@ const server = createServer(async (req, res) => {
     let file;
     if (fixed[path]) file = resolve(root, fixed[path]);
     else if (
-      path.startsWith('/editor/chunks/') ||
-      path.startsWith('/editor/fonts/')
+      path.startsWith('/admin/chunks/') ||
+      path.startsWith('/admin/fonts/')
     ) {
       const vendor = resolve(root, 'cms/vendor');
       file = resolve(
         vendor,
-        '.' + decodeURIComponent(path.slice('/editor'.length)),
+        '.' + decodeURIComponent(path.slice('/admin'.length)),
       );
       if (!file.startsWith(vendor + sep)) throw Error('Invalid path');
     } else {

@@ -11,6 +11,7 @@ export default {
           'imprint',
           'branding',
           'assets',
+          'admin',
           'editor',
           'start',
           'help',

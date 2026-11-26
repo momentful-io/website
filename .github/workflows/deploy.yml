@@ -1,0 +1,60 @@
+# Builds the website and uploads it after every commit to main,
+# including content saved in the online CMS at /admin/.
+# Settings: secrets of the "production" environment, same names as in .env.example.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Queue deployments instead of cancelling one halfway through an upload.
+concurrency:
+  group: production
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: production
+      url: https://momentful.io
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
+        with:
+          node-version-file: .nvmrc
+
+      - run: npm ci
+
+      - name: Write SSH key
+        env:
+          DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+        run: |
+          if [ -n "$DEPLOY_SSH_KEY" ]; then
+            (umask 077 && printf '%s\n' "$DEPLOY_SSH_KEY" > "$RUNNER_TEMP/deploy_key")
+          fi
+
+      - name: Build and upload
+        env:
+          DEPLOY_PROTOCOL: ${{ secrets.DEPLOY_PROTOCOL }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+          DEPLOY_REMOTE_DIR: ${{ secrets.DEPLOY_REMOTE_DIR }}
+          DEPLOY_HOST_KEY_SHA256: ${{ secrets.DEPLOY_HOST_KEY_SHA256 }}
+          DEPLOY_PASSWORD: ${{ secrets.DEPLOY_PASSWORD }}
+          DEPLOY_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY != '' && format('{0}/deploy_key', runner.temp) || '' }}
+          DEPLOY_PASSPHRASE: ${{ secrets.DEPLOY_PASSPHRASE }}
+        run: npm run deploy
+
+      - name: Remove SSH key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/deploy_key"

@@ -37,12 +37,14 @@ const page = (name, label, extra = []) => ({
 export default {
   load_config_file: false,
   locale: 'en',
-  // Local use only: editor.html hides the GitHub sign-in, so the CMS works
-  // through "Work with Local Repository". The repo value names the browser
-  // cache and repository links; it is not used to connect to GitHub.
+  // Online at /admin/, editors sign in with a fine-grained GitHub access token
+  // (this repository only, Contents: read and write). Saving commits to main,
+  // and .github/workflows/deploy.yml publishes the site. The local editor
+  // hides the sign-in and works through "Work with Local Repository".
   backend: {
     name: 'github',
     repo: 'momentful-io/website',
+    branch: 'main',
     auth_methods: ['token'],
   },
   media_folder: 'src/assets/uploads',
@@ -83,7 +85,7 @@ export default {
         // Keep the reserved names in sync with src/projects/projects.11tydata.js.
         text('slug', 'URL slug', {
           pattern: [
-            '^(?!(?:mission|imprint|branding|assets|editor|start|help)$)[a-z0-9]+(?:-[a-z0-9]+)*$',
+            '^(?!(?:mission|imprint|branding|assets|admin|editor|start|help)$)[a-z0-9]+(?:-[a-z0-9]+)*$',
             'Use lowercase letters, numbers and single hyphens; no reserved page names.',
           ],
           hint: 'The public URL is /slug/. Keep existing slugs unchanged to preserve links.',

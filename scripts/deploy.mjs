@@ -51,11 +51,31 @@ export function parseEnv(source) {
   return values;
 }
 
-export async function loadConfig(root) {
+const settings = [
+  'DEPLOY_PROTOCOL',
+  'DEPLOY_HOST',
+  'DEPLOY_PORT',
+  'DEPLOY_USER',
+  'DEPLOY_REMOTE_DIR',
+  'DEPLOY_HOST_KEY_SHA256',
+  'DEPLOY_PASSWORD',
+  'DEPLOY_PRIVATE_KEY',
+  'DEPLOY_PASSPHRASE',
+];
+
+export async function loadConfig(root, environment = process.env) {
   let source;
   try {
     source = await readFile(resolve(root, '.env'), 'utf8');
   } catch {
+    // GitHub Actions passes the same settings as environment variables (secrets), not as a file.
+    if (environment.GITHUB_ACTIONS === 'true')
+      return validateConfig(
+        Object.fromEntries(
+          settings.map((key) => [key, environment[key]?.trim() || '']),
+        ),
+        root,
+      );
     fail(
       'The local .env file is missing or unreadable. Copy .env.example to .env and fill in the settings locally.',
     );
@@ -77,7 +97,9 @@ export async function validateConfig(env, root) {
     ...(sftp ? ['DEPLOY_HOST_KEY_SHA256'] : []),
   ]) {
     if (!env[key]?.trim())
-      fail(`Missing configuration: set ${key} in the local .env file.`);
+      fail(
+        `Missing configuration: set ${key} in the local .env file (GitHub Actions: as a secret of the production environment).`,
+      );
   }
   const host = env.DEPLOY_HOST;
   if (

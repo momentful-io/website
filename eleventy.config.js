@@ -42,6 +42,16 @@ export default function (config) {
       .slice(0, 16);
     return `/assets/${filename}?v=${version}`;
   });
+  // Online CMS (GitHub access token sign-in); scripts/prepare-cms.mjs creates cms/vendor.
+  config.addPassthroughCopy({
+    'cms/editor.html': 'admin/index.html',
+    'cms/editor.js': 'admin/editor.js',
+    'cms/config.mjs': 'admin/config.js',
+    'cms/vendor/sveltia-cms.js': 'admin/sveltia-cms.js',
+    'cms/vendor/chunks': 'admin/chunks',
+    'cms/vendor/fonts': 'admin/fonts',
+    'cms/vendor/LICENSE.txt': 'admin/LICENSE.txt',
+  });
   config.addPassthroughCopy({
     'node_modules/@fontsource-variable/roboto/files/roboto-latin-wght-normal.woff2':
       'assets/fonts/roboto-latin.woff2',
